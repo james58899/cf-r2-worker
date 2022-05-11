@@ -1,0 +1,24 @@
+{
+  "name": "cf-r2-worker",
+  "version": "1.0.0",
+  "devDependencies": {
+    "wrangler": "2.0.2"
+  },
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev",
+    "publish": "wrangler publish"
+  },
+  "description": "Cloudflare R2 access worker with cache.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/james58899/cf-r2-worker.git"
+  },
+  "author": "James58899",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/james58899/cf-r2-worker/issues"
+  },
+  "homepage": "https://github.com/james58899/cf-r2-worker#readme"
+}

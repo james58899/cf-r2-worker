@@ -1,0 +1,7 @@
+name = "cf-r2-worker"
+main = "src/index.js"
+compatibility_date = "2022-05-11"
+
+[[r2_buckets]]
+binding = 'BUCKET' # <~ valid JavaScript variable name
+bucket_name = ''

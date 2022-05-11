@@ -86,7 +86,7 @@ async function handleRequest(event) {
       // Store the fetched response as cacheKey
       // Use waitUntil so you can return the response without blocking on
       // writing to cache
-      await event.waitUntil(cache.put(cacheKey, response.clone()));
+      event.waitUntil(cache.put(cacheKey, response.clone()));
   }
   return response;
 }

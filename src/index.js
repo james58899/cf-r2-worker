@@ -40,10 +40,7 @@ async function handleRequest(event) {
         // Cache hit
         if (response) return response
 
-        const object = await BUCKET.get(objectName, {
-            range: parseRange(request.headers.get('range')),
-            onlyIf: request.headers,
-        })
+        const object = await BUCKET.get(objectName)
 
         if (!object) {
             return objectNotFound(objectName)

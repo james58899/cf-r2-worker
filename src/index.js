@@ -32,50 +32,48 @@ async function handleRequest(event) {
         return new Response(undefined, { status: 400 })
     }
 
-    if (request.method === 'GET') {
-        const cacheKey = new Request(url.toString(), request)
+    if (request.method === 'GET' || request.method === 'HEAD') {
+        // Cache matching
         const cache = caches.default
+        const cacheKey = new Request(url.toString(), {
+            headers: request.headers,
+            method: 'GET' // Make HEAD requests cacheable
+        })
         let response = await cache.match(cacheKey)
-
-        // Cache hit
         if (response) return response
 
-        const object = await BUCKET.get(objectName)
+        const object = await BUCKET.get(objectName, { onlyIf: request.headers })
 
         if (!object) {
             return objectNotFound(objectName)
         }
 
         const headers = new Headers()
+        headers.set('last-modified', object.uploaded.toUTCString())
         headers.set('etag', object.httpEtag)
-        headers.set('content-type', object.httpMetadata.contentType)
-        response = new Response(object.body, {
-            headers,
-        })
+        if (object.httpMetadata.contentType) headers.set('content-type', object.httpMetadata.contentType)
+        if (object.httpMetadata.contentLanguage) headers.set('content-language', object.httpMetadata.contentLanguage)
+        if (object.httpMetadata.contentDisposition) headers.set('content-disposition', object.httpMetadata.contentDisposition)
+        if (object.httpMetadata.contentEncoding) headers.set('content-encoding', object.httpMetadata.contentEncoding)
+        if (object.httpMetadata.cacheControl) headers.set('cache-control', object.httpMetadata.cacheControl)
 
-        // Cache response
-        event.waitUntil(cache.put(cacheKey, response.clone()));
+        if (object.body) {
+            response = new Response(object.body, { headers })
+            // Cache response
+            event.waitUntil(cache.put(cacheKey, response.clone()));
+        } else {
+            response = new Response(object.body, { status: 304, headers })
+        }
+
+        if (request.method === 'HEAD') {
+            headers.set('content-length', object.size)
+            return new Response(null, { headers })
+        }
 
         return response;
-    } else if (request.method === 'HEAD') {
-        const object = await BUCKET.head(objectName, {
-            onlyIf: request.headers,
-        })
-
-        if (!object) {
-            return objectNotFound(objectName)
-        }
-        const headers = new Headers()
-        headers.set('etag', object.httpEtag)
-        headers.set('content-type', object.httpMetadata.contentType)
-        return new Response(null, {
-            headers,
-        })
     }
 
-    return new Response(`Unsupported method`, {
-        status: 400
-    })
+    return new Response(`Unsupported method`, { status: 400 })
 }
 
 addEventListener('fetch', event => {
